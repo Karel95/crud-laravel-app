@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules;
 
 class UserController extends Controller
@@ -31,19 +32,28 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        Log::info('UserController@store: Request data', $request->all());
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            ]);
 
-        return redirect()->route('users.index')->with('success', 'User created successfully.');
+            $user = User::create([
+                'name' => $validatedData['name'],
+                'email' => $validatedData['email'],
+                'password' => Hash::make($validatedData['password']),
+            ]);
+
+            Log::info('UserController@store: User created successfully', ['user_id' => $user->id]);
+
+            return redirect()->route('users.index')->with('success', 'User created successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('UserController@store: Validation failed', ['errors' => $e->errors()]);
+            throw $e;
+        }
     }
 
     /**

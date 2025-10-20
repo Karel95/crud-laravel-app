@@ -11,6 +11,16 @@
                 <div class="p-6 bg-white border-b border-gray-200">
                     <h1 class="text-2xl font-bold">{{ __('Create User') }}</h1>
 
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <form action="{{ route('users.store') }}" method="POST">
                         @csrf
 
